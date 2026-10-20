@@ -4,3 +4,5 @@
 #duopanel{margin-bottom:16px}#duopanel h2{margin-top:12px}.duoscores{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}#duopanel .dialogactions button{white-space:normal}
 
 .buildgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.buildgrid .card{margin:0;display:flex;flex-direction:column}.buildgrid p{flex:1}.buildgrid h3{font-size:13px;color:var(--yellow)}.buildicon{color:var(--green)}.buildgrid button{padding:8px}#expansionpanel{margin-bottom:20px}@media(max-width:420px){.buildgrid{gap:6px}.buildgrid .card{padding:10px}.buildgrid p{font-size:10px}}
+
+.techtree{margin-top:24px;border-top:1px solid var(--line)}.techgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.techgrid .card{margin:0;display:flex;flex-direction:column;gap:10px}.techgrid h4{margin:0;color:var(--yellow)}.techgrid p{margin:0;flex:1}.techgrid small{letter-spacing:0;line-height:1.6}.techdone{border-color:var(--green)}.techgrid button{white-space:normal;padding:8px}@media(max-width:420px){.techgrid{grid-template-columns:1fr}}
