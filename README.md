@@ -4,7 +4,7 @@ Eigenständiger, für Touchscreens angepasster Nachbau der historischen Landwirt
 
 ## Spielen
 
-`dist/index.html` über einen statischen Webserver bereitstellen. Keine Installation, Abhängigkeiten oder externe Dienste erforderlich. Die veröffentlichte Version unterstützt iPhone und Android, Hoch- und Querformat, lokale Spielstände, JSON-Export und -Import sowie einen Offline-Cache nach erfolgreichem ersten Laden. Offline-Verfügbarkeit hängt vom Browser und dessen Speicherverwaltung ab.
+`index.html` über einen statischen Webserver bereitstellen. Keine Installation, Abhängigkeiten oder externe Dienste erforderlich. Die veröffentlichte Version unterstützt iPhone und Android, Hoch- und Querformat, lokale Spielstände, JSON-Export und -Import sowie einen Offline-Cache nach erfolgreichem ersten Laden. Offline-Verfügbarkeit hängt vom Browser und dessen Speicherverwaltung ab.
 
 ## Rekonstruktion
 

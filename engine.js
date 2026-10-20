@@ -1,0 +1,31 @@
+(function(root){
+'use strict';
+const crops={forest:{name:'Wald',cost:5,work:.45,yield:0,color:'#50b879'},pasture:{name:'Weide',cost:3,work:.2,yield:0,color:'#7bb85b'},millet:{name:'Hirse',cost:10,work:.65,yield:44,color:'#eee278'},vegetables:{name:'Gemüse',cost:22,work:1.1,yield:82,color:'#67df75'},fallow:{name:'Brache',cost:0,work:0,yield:0,color:'#8c7858'}};
+function fresh(d=1){return {version:1,difficulty:d,year:0,money:[0,300,600,500,400][d],stock:d===1?0:100,tools:50,herd:d===1?7:[0,0,25,20,15][d],species:d===1?'Rinder':'Ziegen',people:[{age:68},{age:64},{age:36},{age:32},{age:18},{age:10},{age:6}],school:0,planning:false,seed:Math.floor(Math.random()*2147483646)+1,fields:Array.from({length:10},(_,i)=>({crop:i<2?'millet':i<4?'pasture':'forest',soil:100-i*2,terrace:false,well:false})),history:[],over:false,hardship:0,weather:'Noch keine Ernte',lastYields:Array(10).fill(0)};}
+function random(s){s.seed=s.seed*16807%2147483647;return(s.seed-1)/2147483646;}
+function labor(s){let kids=s.school;return Math.round((s.people.reduce((v,p)=>v+(p.age<6?0:p.age<16?(kids-->0?0:.4):p.age<60?1:p.age<75?.45:.15),0)+s.tools/55)*100)/100;}
+function need(s){return Math.round(s.people.reduce((v,p)=>v+(p.age<6?20:p.age<16?30:40),0));}
+function quote(s,plan){let cost=0,work=0;plan.forEach((p,i)=>{let f=s.fields[i],c=crops[p.crop];cost+=c.cost;work+=c.work;if(f.crop==='forest'&&p.crop!=='forest'){cost+=8;work+=.35;}if(p.terrace&&!f.terrace){cost+=50;work+=.8;}if(p.well&&!f.well){cost+=70;work+=.9;}});return {cost:Math.round(cost),work:Math.round(work*100)/100};}
+function harvest(s,plan){if(s.over)throw Error('Dieser Hof wurde aufgegeben.');let q=quote(s,plan);if(q.cost>s.money)throw Error('Für diesen Anbauplan fehlt Geld.');if(q.work>labor(s)+.001)throw Error('Für diesen Anbauplan fehlt Arbeitskraft.');s.money-=q.cost;let r=random(s),weather=r<.18?'Dürre':r<.33?'Starkregen':r<.47?'Trockenes Jahr':r<.86?'Gute Regenzeit':'Reiche Regenzeit',dry=weather==='Dürre',wet=weather==='Starkregen',events=[],food=0,cash=0;
+let pasture=plan.filter(f=>f.crop==='pasture').length,forests=plan.filter(f=>f.crop==='forest').length,wells=plan.filter(f=>f.well).length;
+s.fields=plan.map((p,i)=>{let old=s.fields[i],f={...p,soil:old.soil},c=crops[f.crop];let factor=dry?(f.well?.85:.18):wet?(f.terrace?1.05:.55):weather==='Trockenes Jahr'?(f.well?1:.65):weather==='Reiche Regenzeit'?1.25:1;
+let y=Math.round(c.yield*(f.soil/100)*factor*(1-i*.026)*(f.terrace?1.18:1)*(1+s.tools/500));s.lastYields[i]=y;if(f.crop==='millet')food+=y;if(f.crop==='vegetables')cash+=y;
+let erosion=f.crop==='forest'?-5:f.crop==='fallow'?-3:f.terrace?.5:(wet?6:2)+i*.3+Math.max(0,4-forests)*.4;
+f.soil=Math.max(15,Math.min(100,f.soil-erosion));return f;});
+if(s.difficulty>1&&random(s)<.1){food=Math.round(food*.65);cash=Math.round(cash*.65);events.push('Heuschrecken haben einen Teil der Ernte zerstört.');}
+let cap=pasture*(s.species==='Rinder'?4:10);if(s.herd>cap){let lost=Math.ceil((s.herd-cap)*.22);s.herd-=lost;events.push('Zu wenig Weide: '+lost+' Tiere verloren.');}if(dry&&wells===0&&s.herd>0){let lost=Math.ceil(s.herd*.28);s.herd-=lost;events.push('Ohne Wasserloch verenden '+lost+' Tiere.');}
+let animalFood=Math.round(s.herd*(s.species==='Rinder'?12:3.5)*(dry?.65:1));food+=animalFood;let births=s.herd>1&&pasture>0?Math.floor(s.herd*(s.species==='Rinder'?.15:.22)*random(s)):0;s.herd+=births;if(births)events.push(births+' Jungtiere geboren.');
+s.money+=cash;let demand=need(s),available=food+s.stock,missing=Math.max(0,demand-available),price=weather==='Dürre'?1.5:1;
+let purchase=Math.min(missing,Math.floor(s.money/price));s.money-=Math.ceil(purchase*price);available+=purchase;if(purchase)events.push(purchase+' Nahrung für '+Math.ceil(purchase*price)+' G gekauft.');
+let shortage=Math.max(0,demand-available),surplus=Math.max(0,available-demand);if(s.difficulty===1){s.money+=Math.floor(surplus*.65);s.stock=0;}else{s.stock=Math.floor(surplus*.9);if(surplus)events.push('10 % Lagerverlust; '+s.stock+' Nahrung eingelagert.');}
+if(shortage>0&&s.herd>0){let per=s.species==='Rinder'?45:12,killed=Math.min(s.herd,Math.ceil(shortage/per));s.herd-=killed;shortage=Math.max(0,shortage-killed*per);events.push(killed+' Tiere zur Ernährung geschlachtet.');}
+s.hardship=shortage>0?s.hardship+1:0;if(shortage>0)events.push('Nahrungsmangel: '+shortage+' Einheiten fehlen.');
+let enrolled=s.school;s.people.forEach(p=>{let attends=p.age>=6&&p.age<16&&enrolled-->0;p.age++;if(attends){p.education=(p.education||0)+1;}});let graduated=s.people.filter(p=>p.age>=17&&(p.education||0)>=5);if(graduated.length){s.money+=graduated.length*30;events.push('Schulbildung bringt '+graduated.length*30+' G Einkommen.');}
+s.school=Math.min(s.school,s.people.filter(p=>p.age>=6&&p.age<16).length);
+if(!s.planning&&random(s)<.23){s.people.push({age:0});events.push('Ein Kind wurde geboren.');}
+if(s.people.some(p=>p.age>80)&&random(s)<.25){let i=s.people.findIndex(p=>p.age>80);s.people.splice(i,1);events.push('Ein älteres Familienmitglied ist verstorben.');}
+s.tools=Math.max(0,Math.round(s.tools*.92));s.money=Math.round(s.money);s.year++;s.weather=weather;s.over=s.hardship>=2;
+let report={year:s.year,weather,food,cash,demand,purchase,shortage,money:s.money,stock:s.stock,herd:s.herd,events};s.history.push(report);return report;}
+root.FarmEngine={crops,fresh,labor,need,quote,harvest};
+if(typeof module!=='undefined')module.exports=root.FarmEngine;
+})(typeof window!=='undefined'?window:globalThis);
